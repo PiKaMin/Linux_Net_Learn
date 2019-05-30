@@ -5,7 +5,8 @@
 #include <string>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
+#include <unistd.h>
+#include <cstring>
 
 using std::cout;
 using std::endl;
@@ -32,6 +33,7 @@ public:
 
   bool Bind(std::string& ip, uint16_t port){
     sockaddr_in addr;
+    memset(&addr, 0, sizeof addr);
     addr.sin_family = PF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(ip.c_str());
@@ -46,13 +48,55 @@ public:
 
   }
 
-  bool Send(){
-  
+  // str: 发送的字符串 | ip: 对端ip | port: 对端端口号
+  bool Send(std::string& str, std::string& ip, uint16_t port){
+
+    sockaddr_in dstAddr;
+    memset(&dstAddr, 0, sizeof dstAddr);
+    dstAddr.sin_family = AF_INET;
+    dstAddr.sin_port = htons(port);
+    dstAddr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+    int ret = sendto(_sock, str.c_str(), str.size(), 0, (sockaddr*)&dstAddr, sizeof(dstAddr));
+
+    if (ret == -1){
+      cout << "Send() error" << endl;
+      return false;
+    }
+    return true;
+
   }
 
-  bool Recv(){
-  
+  // str: 接收到的字符串 | ip: 传出对端ip | port: 可传出对端端口
+  bool Recv(std::string& str, std::string* ip = nullptr, uint16_t* port = nullptr){
+    sockaddr_in dstAddr;
+    socklen_t len = sizeof(dstAddr);
+    char buf[1024] = {0};
+    int recvSize = recvfrom(_sock, buf, sizeof buf - 1, 0, (sockaddr*)&dstAddr, &len);
+    if (recvSize == -1) {
+      cout << "recv() error" << endl;
+      return false;
+    }
+
+
+    str.assign(buf, recvSize);
+    if (ip != nullptr){
+      *ip = inet_ntoa(dstAddr.sin_addr);
+    }
+    if (port != nullptr){
+      *port = ntohs(dstAddr.sin_port);
+    }
+    return true;
   }
+
+  bool Close(){
+    if(close(_sock) == -1){
+      return false;
+    }
+    _sock = -1;
+    return true;
+  }
+
 private:
   int _sock;
 };
