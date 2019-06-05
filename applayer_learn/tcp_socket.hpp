@@ -90,8 +90,8 @@ public:
   }
 
   bool Recv(string& msg){
-    char buf[4096] = {0};
-    int recvSize = recv(_fd, buf, 4096, 0);
+    char buf[4096 * 10] = {0};
+    int recvSize = recv(_fd, buf, 1024 * 10, 0);
     if (recvSize < 0){
       cout << "recv() err" << endl;
       return false;
