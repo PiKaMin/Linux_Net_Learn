@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "DataProtocol.h"
 
 using std::cout;
 using std::endl;
@@ -44,21 +45,35 @@ int main(){
          ,inet_ntoa(clntAddr.sin_addr)
          , ntohs(clntAddr.sin_port));
 
-  char buf[1024] = {};
   while(1){
-    int recvSz = recv(clntSock, buf, 1024, 0);
-    if (recvSz < 0){
-      cout << "recv error" << endl;
-      return 1;
-    }
-    else if (recvSz == 0){
-      cout << "client closed" << endl;
+    DataHeader header = {0, TYPE_ERROR};
+    int recvSz = recv(clntSock, &header, sizeof(DataHeader), MSG_PEEK);
+    if (recvSz <= 0){
+      cout << "client closed, exit" << endl;
       close(clntSock);
       break;
     }
-    printf("recv msg: %s\n", buf);
+    switch(header.type){
+    case TYPE_LOGIN :{
+                       DataLogin login;
+                       int recvSz = recv(clntSock, &login, sizeof(DataLogin), 0);
+                       printf("recv msg: username = %s, password = %s\n"
+                              ,login.username, login.password );
 
-    send(clntSock, buf, recvSz, 0);
+                       DataLoginRes loginRes;
+                       send(clntSock, &loginRes, sizeof(DataLoginRes), 0);
+                     }
+                     break;
+    case TYPE_LOGOUT : {
+                         DataLogout logout;
+                         int recvSz = recv(clntSock, &logout, sizeof(DataLogout), 0);
+                         printf("username = %s logout\n", logout.username);
+
+                         DataLogoutRes logoutRes;
+                         send(clntSock, &logoutRes, sizeof(DataLogoutRes), 0);
+                       }
+                       break;
+    }
   }
 
 

@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
+#include <cstring>
+#include "DataProtocol.h"
 
 using std::cin;
 using std::cout;
@@ -29,7 +31,8 @@ int main(){
   }
 
   string str;
-  char buf[1024];
+  cout << "input login or logout" << endl;
+  cout << "input q or Q exit" << endl;
   while(1){
     cout << "input msg:";
     getline(cin, str);
@@ -37,20 +40,30 @@ int main(){
       cout << "exit client" << endl;
       break;
     }
-    int sendSz = send(sock, str.c_str(), str.size() + 1, 0);
-    if (sendSz < 0){
-      cout << "sendSz error" << endl;
-      return 1;
+    else if (str == "login"){
+      DataLogin login;
+      strcpy(login.username, "yukina");
+      strcpy(login.password, "yukina2333");
+      int sendSz = send(sock, &login, sizeof(DataLogin), 0);
+
+      DataLoginRes loginRes;
+      int recvSz = recv(sock, &loginRes, sizeof(DataLoginRes), 0);
+      printf("recv msg res: res = %d\n", loginRes.res);
     }
+    else if (str == "logout"){
+      DataLogout logout;
+      strcpy(logout.username, "yukina");
+      int sendSz = send(sock, &logout, sizeof(DataLogout), 0);
 
-    int recvSz = recv(sock, buf, 1024, 0);
-    if (recvSz < 0){
-      cout << "recv error" << endl;
-      return 1;
+      DataLogoutRes logoutRes;
+      int recvSz = recv(sock, &logoutRes, sizeof(DataLogoutRes), 0);
+      printf("recv msg res: res = %d\n", logoutRes.res);
+
     }
-
-    printf("recv msg: %s\n", buf);
-
+    else {
+      cout << "input error" << endl;
+      continue;
+    }
   }
   close(sock);
   return 0;
