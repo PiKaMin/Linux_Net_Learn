@@ -3,12 +3,23 @@ enum DataType{
   TYPE_LOGIN_RESULT,
   TYPE_LOGOUT,
   TYPE_LOGOUT_RESULT,
-  TYPE_ERROR
+  TYPE_ERROR,
+  TYPE_NEW_CLIENT,
+
 };
 
 struct DataHeader{
   int dataLength;
   DataType type;
+};
+
+struct DataNewClient : public DataHeader{
+  DataNewClient(){
+    dataLength = sizeof(DataNewClient);
+    type = TYPE_NEW_CLIENT;
+  }
+  char ip[64];
+  int port;
 };
 
 struct DataLogin : public DataHeader{

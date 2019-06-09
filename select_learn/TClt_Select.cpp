@@ -24,7 +24,7 @@ int main(){
   sockaddr_in servAddr;
   servAddr.sin_family = AF_INET;
   servAddr.sin_port = htons(9080);
-  servAddr.sin_addr.s_addr = inet_addr("192.168.30.147");
+  servAddr.sin_addr.s_addr = inet_addr("192.168.30.148");
   if (connect(sock, (sockaddr*)&servAddr, sizeof(sockaddr_in)) < 0){
     cout << "connect error" << endl;
     return 1;

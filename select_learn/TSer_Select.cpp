@@ -8,6 +8,7 @@
 #include "DataProtocol.h"
 #include <sys/select.h>
 #include <vector>
+#include <cstring>
 
 using std::vector;
 using std::cout;
@@ -95,9 +96,18 @@ int main(){
         return 1;
       }
 
+      DataNewClient clientData;
+      strcpy(clientData.ip, inet_ntoa(clntAddr.sin_addr));
+      clientData.port = ntohs(clntAddr.sin_port); 
       printf("Connect: Ip = %s, Port = %d\n"
-             ,inet_ntoa(clntAddr.sin_addr)
-             , ntohs(clntAddr.sin_port));
+             ,clientData.ip
+             , clientData.port);
+
+      for (int i = 0; i < maxSock + 1; i++){
+        if (i != servSock && FD_ISSET(i, &fdRead)){
+          send(i, &clientData, sizeof(DataNewClient), 0);
+        }
+      }
 
       FD_SET(clntSock, &fdRead);
       if (clntSock > maxSock){
