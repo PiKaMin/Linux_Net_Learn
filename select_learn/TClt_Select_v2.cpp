@@ -7,9 +7,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <cstring>
-#include "DataProtocol.h"
 #include <sys/select.h>
 #include <sys/time.h>
+#include <thread>
+#include "DataProtocol.h"
 
 using std::cin;
 using std::cout;
@@ -50,6 +51,37 @@ int DeulEvent(int sock){
   return 0;
 }
 
+bool g_isRun = true;
+void InputThread(int sock){
+
+  string str;
+  cout << "input login or logout" << endl;
+  cout << "input q or Q exit" << endl;
+  while(1){
+    cout << "input msg:";
+    getline(cin, str);
+    if (str == "q" || str == "Q"){
+      cout << "exit client" << endl;
+      g_isRun = false;
+      return ;
+    }
+    else if (str == "login"){
+      DataLogin login;
+      strcpy(login.username, "yukina");
+      strcpy(login.password, "yukina2333");
+      send(sock, &login, sizeof(DataLogin), 0);
+    }
+    else if (str == "logout"){
+      DataLogout logout;
+      strcpy(logout.username, "yukina");
+      send(sock, &logout, sizeof(DataLogout), 0);
+    }
+    else {
+      cout << "input error" << endl;
+    }
+  }
+}
+
 int main(){
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0){
@@ -60,7 +92,7 @@ int main(){
   sockaddr_in servAddr;
   servAddr.sin_family = AF_INET;
   servAddr.sin_port = htons(9080);
-  servAddr.sin_addr.s_addr = inet_addr("192.168.30.148");
+  servAddr.sin_addr.s_addr = inet_addr("192.168.30.149");
   if (connect(sock, (sockaddr*)&servAddr, sizeof(sockaddr_in)) < 0){
     cout << "connect error" << endl;
     return 1;
@@ -68,13 +100,15 @@ int main(){
 
   fd_set fdRead;
   FD_ZERO(&fdRead);
-  while(1){
+  std::thread th(InputThread, sock);
+  th.detach();
+  while(g_isRun){
     FD_SET(sock, &fdRead);
     timeval timeout;
     timeout.tv_sec = 2;
     timeout.tv_usec = 0;
     int ret = select(sock + 1, &fdRead, nullptr, nullptr, &timeout);
-    cout << "Do other things..." << endl;
+    // cout << "Do other things..." << endl;
     if (ret < 0){
       cout << "select error";
       break;
@@ -85,11 +119,6 @@ int main(){
       }
     }
 
-    DataLogin login;
-    strcpy(login.username, "yukina");
-    strcpy(login.password, "yukina233");
-    send(sock, &login, sizeof(DataLogin), 0);
-    sleep(1);
   }
   close(sock);
   return 0;
