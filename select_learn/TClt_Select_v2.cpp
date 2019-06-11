@@ -17,6 +17,7 @@ using std::cout;
 using std::string;
 using std::endl;
 
+// 处理send
 int DeulEvent(int sock){
   DataHeader header = {0, TYPE_ERROR};
   int recvSz = recv(sock, &header, sizeof(DataHeader), MSG_PEEK);
@@ -52,6 +53,7 @@ int DeulEvent(int sock){
 }
 
 bool g_isRun = true;
+// 开启一个线程处理键盘录入, 并recv
 void InputThread(int sock){
 
   string str;
@@ -92,7 +94,7 @@ int main(){
   sockaddr_in servAddr;
   servAddr.sin_family = AF_INET;
   servAddr.sin_port = htons(9080);
-  servAddr.sin_addr.s_addr = inet_addr("192.168.30.149");
+  servAddr.sin_addr.s_addr = inet_addr("192.168.79.140");
   if (connect(sock, (sockaddr*)&servAddr, sizeof(sockaddr_in)) < 0){
     cout << "connect error" << endl;
     return 1;
